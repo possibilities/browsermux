@@ -1,6 +1,9 @@
 #import <Cocoa/Cocoa.h>
 NS_ASSUME_NONNULL_BEGIN
 /// CEF implementation is entirely Objective-C++; Swift never owns a CEF pointer.
+#ifdef __cplusplus
+extern "C" {
+#endif
 BOOL SPBInitialize(NSString *dataRoot);
 void SPBRunLoop(void);
 void SPBShutdown(void);
@@ -22,6 +25,9 @@ void SPBSetDarkMode(BOOL dark);
 void SPBRetireContainer(NSString *containerID);
 NSInteger SPBLiveBrowserCount(void);
 NSString *SPBEngineVersion(void);
+#ifdef __cplusplus
+}
+#endif
 @interface SPBApplication : NSApplication
 @end
 NS_ASSUME_NONNULL_END

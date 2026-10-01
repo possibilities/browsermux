@@ -3,6 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 [[ $(uname -s) == Darwin ]] || { echo 'Native build requires macOS and an official Xcode SDK' >&2; exit 64; }
 [[ $(uname -m) == arm64 ]] || { echo 'This alpha currently targets Apple Silicon' >&2; exit 64; }
+export MACOSX_DEPLOYMENT_TARGET=14.5
 xcrun --find swiftc >/dev/null
 # Catch native syntax failures before fetching and building dependencies.
 xcrun swiftc -frontend -parse macos/Sources/*.swift

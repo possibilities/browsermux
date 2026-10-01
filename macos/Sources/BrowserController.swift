@@ -52,7 +52,7 @@ final class BrowserController:NSObject,NSWindowDelegate,NSTextFieldDelegate {
         canvas.select={[weak self] id in self?.send("focus_pane",["pane_id":id],focus:true)}
         canvas.submit={[weak self] text in self?.navigate(text)}
         canvas.resize={[weak self] id,ratio in self?.send("resize_split",["split_id":id,"ratio":ratio])}
-        SPBSetEventHandler {[weak self] event in DispatchQueue.main.async {self?.event(event as! [String:Any])}}
+        SPBSetEventHandler {[weak self] event in DispatchQueue.main.async {self?.event(event)}}
         prefixMonitor=NSEvent.addLocalMonitorForEvents(matching:.keyDown){[weak self] in self?.key($0) ?? $0}
         focusMonitor=NSEvent.addLocalMonitorForEvents(matching:[.leftMouseDown,.rightMouseDown]){[weak self] event in
             guard let self=self,event.window===self.window else{return event}
