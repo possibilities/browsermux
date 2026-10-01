@@ -1,0 +1,17 @@
+[package]
+name = "browser-bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version = "1.89"
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+[dependencies]
+browser-core = { path = "../browser-core" }
+browser-policy = { path = "../browser-policy" }
+uniffi = { version = "=0.32.2", features = ["cli"] }
+serde_json = "=1.0.149"
+thiserror = "=2.0.18"
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bindgen.rs"

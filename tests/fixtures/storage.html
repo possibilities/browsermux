@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>Container isolation fixture</title>
+<style>:root{color-scheme:light dark}body{font:20px system-ui;margin:3em}input{font:inherit;width:80%}</style>
+<h1>Container isolation fixture</h1><p id="status">Testing…</p><input aria-label="Keyboard and IME test editor" placeholder="Type here to verify input routing">
+<script>
+(async()=>{
+  const q=new URLSearchParams(location.search),expected=q.get('expected'),mode=q.get('mode')||'write',pane=q.get('pane');
+  const getDB=()=>new Promise((resolve,reject)=>{let r=indexedDB.open('isolation',1);r.onupgradeneeded=()=>r.result.createObjectStore('values');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+  const db=await getDB();
+  const idb=(value)=>new Promise((resolve,reject)=>{const tx=db.transaction('values',value===undefined?'readonly':'readwrite');const r=value===undefined?tx.objectStore('values').get('account'):tx.objectStore('values').put(value,'account');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+  try {
+    if(mode==='write') { document.cookie='account='+expected+'; SameSite=Strict; path=/';localStorage.setItem('account',expected);await idb(expected);await(await caches.open('isolation')).put('/account',new Response(expected)); }
+    await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;
+    await new Promise(r=>setTimeout(r,1200));
+    const actual={cookie:document.cookie.split('; ').find(x=>x.startsWith('account='))?.split('=')[1],localStorage:localStorage.getItem('account'),indexedDB:await idb(),cache:await(await(await caches.open('isolation')).match('/account')).text()};
+    const pass=Object.values(actual).every(x=>x===expected);
+    document.querySelector('#status').textContent=JSON.stringify({expected,mode,actual,pass});
+    await fetch('/result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pane,expected,mode,actual,pass,dark:matchMedia('(prefers-color-scheme: dark)').matches})});
+  } catch(error){await fetch('/result',{method:'POST',body:JSON.stringify({pane,expected,mode,pass:false,error:String(error)})})}
+})();
+</script>

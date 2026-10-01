@@ -1,0 +1,13 @@
+/target/
+/.build/
+/build/
+/vendor/
+*.dSYM/
+.DS_Store
+*.sqlite3*
+
+# Private input specification, not a public deliverable
+/docs/specification.txt
+__pycache__/
+*.pyc
+/scripts/env.sh

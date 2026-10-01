@@ -1,0 +1,14 @@
+[workspace]
+members = ["crates/browser-core", "crates/browser-policy", "crates/browser-bridge"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+rust-version = "1.85"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "unwind"
