@@ -1206,3 +1206,52 @@ fn imported_nil_split_duplicate_tab_and_active_tab_references_are_rejected() {
     bad["panes"][index]["active_tab_id"] = json!(Id::new());
     assert!(BrowserCore::from_session(&bad.to_string()).is_err());
 }
+
+#[test]
+fn native_isolation_fixture_fits_a_small_hosted_display() {
+    let mut core = BrowserCore::new();
+    core.dispatch(Command::SetViewport {
+        width: 800.0,
+        height: 500.0,
+    })
+    .unwrap();
+    let original = active(&core).0;
+    let a = create(&mut core, "Fixture A", Persistence::Persistent);
+    let b = create(&mut core, "Fixture B", Persistence::Persistent);
+    switch(&mut core, original, a);
+    let right = split(&mut core, Axis::LeftRight);
+    switch(&mut core, right, b);
+    let bottom_right = split(&mut core, Axis::TopBottom);
+    switch(&mut core, bottom_right, a);
+    core.dispatch(Command::FocusPane { pane_id: original })
+        .unwrap();
+    let bottom_left = split(&mut core, Axis::TopBottom);
+    let temp = create(&mut core, "Fixture Temp", Persistence::Temporary);
+    switch(&mut core, bottom_left, temp);
+    let snapshot = core.snapshot();
+    assert_eq!(snapshot.panes.len(), 4);
+    assert_eq!(
+        snapshot
+            .panes
+            .iter()
+            .filter(|p| p.container_id == a)
+            .count(),
+        2
+    );
+    assert_eq!(
+        snapshot
+            .panes
+            .iter()
+            .filter(|p| p.container_id == b)
+            .count(),
+        1
+    );
+    assert_eq!(
+        snapshot
+            .panes
+            .iter()
+            .filter(|p| p.container_id == temp)
+            .count(),
+        1
+    );
+}

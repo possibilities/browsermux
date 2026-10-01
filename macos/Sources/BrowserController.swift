@@ -89,7 +89,13 @@ final class BrowserController:NSObject,NSWindowDelegate,NSTextFieldDelegate {
             reconcile()
             if focus {SPBFocus(state.focused.activeTabId)}
             if !["navigation_started","set_viewport"].contains(type) {scheduleFlush()}
-        } catch {showError(error.localizedDescription)}
+        } catch {
+            if smokeTest {
+                fputs("NATIVE_SMOKE command failed: \(type): \(error.localizedDescription)\n",stderr)
+                exit(23)
+            }
+            showError(error.localizedDescription)
+        }
     }
     func scheduleFlush(){flushWork?.cancel();let work=DispatchWorkItem{[weak self] in guard let self=self else{return};do{try self.store.flush()}catch{DispatchQueue.main.async{self.showError("Workspace could not be saved. \(error.localizedDescription)")}}};flushWork=work;persistenceQueue.asyncAfter(deadline:.now()+0.35,execute:work)}
     func render() {
@@ -262,9 +268,13 @@ final class BrowserController:NSObject,NSWindowDelegate,NSTextFieldDelegate {
     }
     @objc func about(){let a=NSAlert();a.messageText="browsermux 0.1.0";a.informativeText="Swift + AppKit · Rust core · CEF \(SPBEngineVersion())\nDevelopment build. Agent access, live profile replacement and screen capture are gated. Chromium sandbox is required. This build is not notarized. See repository acceptance matrix before using sensitive accounts.";a.runModal()}
     func runSmokeTest(){
+        let originalPane=state.workspace.focusedPane
         send("create_container",["name":"Fixture A","persistence":"persistent"]);send("create_container",["name":"Fixture B","persistence":"persistent"])
         guard let a=state.containers.first(where:{$0.name=="Fixture A"}),let b=state.containers.first(where:{$0.name=="Fixture B"}) else{exit(21)}
-        switchContainer(a.id);splitLeftRight();switchContainer(b.id);splitTopBottom();switchContainer(a.id);send("focus_previous");splitTopBottom()
+        switchContainer(a.id);splitLeftRight();switchContainer(b.id);splitTopBottom();switchContainer(a.id)
+        // Split the full-height left pane, rather than quartering the right one.
+        // Hosted Mac displays may constrain the window below our requested size.
+        send("focus_pane",["pane_id":originalPane]);splitTopBottom()
         send("create_container",["name":"Fixture Temp","persistence":"temporary"])
         if let temp=state.containers.first(where:{$0.name=="Fixture Temp"}){switchContainer(temp.id)}
         if let url=ProcessInfo.processInfo.environment["SPB_FIXTURE_URL"] {
