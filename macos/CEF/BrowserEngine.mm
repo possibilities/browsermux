@@ -21,7 +21,7 @@ std::map<std::string, CefRefPtr<CefRequestContext>> contexts;
 std::map<std::string, std::string> contextPaths;
 std::set<std::string> retiring;
 std::map<std::string, CefRefPtr<Client>> clients;
-void (^events)(NSDictionary*) = nil;
+SPBEventHandler events = nil;
 bool initialized=false, quitting=false;
 std::string focusedTab;
 std::map<int,CefRefPtr<CefBrowser>> toolsBrowsers;
@@ -163,7 +163,7 @@ BOOL SPBInitialize(NSString* dataRoot) {
   initialized=CefInitialize(CefMainArgs(*_NSGetArgc(),*_NSGetArgv()),settings,nullptr,nullptr);
   return initialized;
 }
-void SPBSetEventHandler(void(^handler)(NSDictionary*)) {events=[handler copy];}
+void SPBSetEventHandler(SPBEventHandler handler) {events=[handler copy];}
 void SPBRunLoop(void) {if(initialized)CefRunMessageLoop();}
 void SPBShutdown(void) {NSCAssert(clients.empty() && toolsBrowsers.empty(),@"Live browsers prevent shutdown");contexts.clear();contextPaths.clear();events=nil;if(initialized)CefShutdown();initialized=false;loader.reset();}
 BOOL SPBCreateTab(NSString* tabID,NSString* containerID,NSString* cachePath,NSView* host) {
