@@ -4,10 +4,15 @@ cd "$(dirname "$0")/.."
 [[ $(uname -s) == Darwin ]] || { echo 'Native build requires macOS and an official Xcode SDK' >&2; exit 64; }
 [[ $(uname -m) == arm64 ]] || { echo 'This alpha currently targets Apple Silicon' >&2; exit 64; }
 xcrun --find swiftc >/dev/null
+# Catch native syntax failures before fetching and building dependencies.
+xcrun swiftc -frontend -parse macos/Sources/*.swift
 python3 scripts/fetch-cef.py
 cargo build --locked --release -p browser-bridge
 mkdir -p build/generated
 cargo run --locked --release -p browser-bridge --bin uniffi-bindgen -- generate --library target/release/libbrowser_bridge.dylib --language swift --out-dir build/generated
+xcrun swiftc -typecheck -swift-version 5 -target arm64-apple-macosx14.5 \
+  -import-objc-header macos/CEF/BrowserEngine.h -I build/generated -Xcc -fmodule-map-file=build/generated/browser_bridgeFFI.modulemap \
+  build/generated/browser_bridge.swift macos/Sources/*.swift
 cmake -S macos -B build/native -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH=arm64 -DCMAKE_OSX_ARCHITECTURES=arm64
 cmake --build build/native --parallel 3
 APP="$PWD/build/browsermux.app"

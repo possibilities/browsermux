@@ -24,6 +24,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6.1.0
+      - name: Restore native dependencies
+        id: native-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            vendor/cef
+            target
+            build/native
+          key: native-${{ runner.os }}-${{ runner.arch }}-v1-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml', 'cef-version.json', 'macos/CMakeLists.txt') }}
       - name: Verify Apple toolchain and architecture
         run: |
           uname -a
@@ -36,6 +45,15 @@ jobs:
         run: cargo test --locked --workspace
       - name: Build native AppKit and sandboxed CEF bundle
         run: scripts/build-macos.sh
+      - name: Save native dependencies
+        if: always() && steps.native-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            vendor/cef
+            target
+            build/native
+          key: ${{ steps.native-cache.outputs.cache-primary-key }}
       - name: Native browser isolation smoke test
         run: python3 tests/native_smoke.py
       - name: Package development app

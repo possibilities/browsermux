@@ -170,7 +170,17 @@ final class BrowserController:NSObject,NSWindowDelegate,NSTextFieldDelegate {
             guard let url=e["url"] as? String,let pane=state.panes.first(where:{$0.tabs.contains(where:{$0.id==id})}) else{return}
             send("new_tab",["pane_id":pane.id]);if let new=state.panes.first(where:{$0.id==pane.id})?.activeTabId{send("navigate",["tab_id":new,"url":url])}
         case "download":
-            if let download=e["id"] as? Int {if e["active"] as? Bool == true{downloadActive[id,default:[]].insert(download)}else{downloadActive[id]?.remove(download)};if let tab=state.tab(id){send("set_tab_warnings",["tab_id":id,"has_before_unload":false,"active_downloads":downloadActive[id]?.count ?? 0]);_ = tab};status.stringValue="Download · \(e["name"] as? String ?? "file") · \(e["percent"] as? Int ?? 0)%"
+            if let download=e["id"] as? Int {
+                if e["active"] as? Bool == true {
+                    downloadActive[id,default:[]].insert(download)
+                } else {
+                    downloadActive[id]?.remove(download)
+                }
+            }
+            if state.tab(id) != nil {
+                send("set_tab_warnings",["tab_id":id,"has_before_unload":false,"active_downloads":downloadActive[id]?.count ?? 0])
+            }
+            status.stringValue="Download · \(e["name"] as? String ?? "file") · \(e["percent"] as? Int ?? 0)%"
         case "permission_denied":showError(e["reason"] as? String ?? "Permission denied. Unhandled permissions are blocked by default.")
         case "blocked_navigation":showError("This navigation scheme is not allowed. Only HTTP and HTTPS pages are supported.")
         case "load_error":showError("Page load failed (\(e["code"] as? Int ?? 0)). Certificate errors remain blocked.")
