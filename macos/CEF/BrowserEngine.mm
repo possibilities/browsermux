@@ -98,7 +98,7 @@ class Client final : public CefClient, public CefLifeSpanHandler, public CefDisp
     if(frame->IsMain()) {if(!requestedNavigation)++epoch;requestedNavigation=false;reopen=request->GetMethod()=="GET";event(@"navigation_started");}
     return false;
   }
-  bool OnCertificateError(CefRefPtr<CefBrowser>,cef_errorcode_t,const CefString&,CefRefPtr<CefCallback>) override {return false;}
+  bool OnCertificateError(CefRefPtr<CefBrowser>,cef_errorcode_t,const CefString&,CefRefPtr<CefSSLInfo>,CefRefPtr<CefCallback>) override {return false;}
   void OnTitleChange(CefRefPtr<CefBrowser>,const CefString& title) override {if(!loading)event(@"title",@{@"title":ns(title)});}
   void OnAddressChange(CefRefPtr<CefBrowser>,CefRefPtr<CefFrame> frame,const CefString& url) override {
     if(frame->IsMain()) event(@"address",@{@"url":ns(url),@"reopen_allowed":@(reopen)});

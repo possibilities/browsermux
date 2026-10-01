@@ -106,6 +106,7 @@ final class BrowserController:NSObject,NSWindowDelegate,NSTextFieldDelegate {
     }
     func reconcile() {
         guard engineReady else { return }
+        canvas.layoutSubtreeIfNeeded()
         for pane in state.panes {for tab in pane.tabs where surfaces[tab.id]==nil {
             if createSurface(tab.id,containerID:pane.containerId,paneID:pane.id),tab.url != "about:blank" {engineEpoch[tab.id]=SPBNavigate(tab.id,tab.url)}
         }}
